@@ -14,9 +14,14 @@ sim_raw <- read_csv("data/simulations.csv")
 
 Arsenal have been a tremendously consistent team over the past decade. However, now the tide seems to be turning against Arsène Wenger. Many fans would happily trade in that consistency for a few more league titles.
 
-If you're the fourth best team in the league over 12 seasons, how many league titles should you expect to win? If variance can swing Leicester a league title, you would think it could have throw a few Arsenal's way, too. Fortunately, there are ways to get some cold, hard numbers on this.
+If you're the fourth best team in the league over 12 seasons, how many league titles should you expect to win? If variance can swing Leicester a league title, you would think it could have thrown a few Arsenal's way, too. This is the question that Chris Anderson (writer of _Soccernomics_) asked [on Twitter](https://twitter.com/soccerquant/status/845196556999417856) last week:
+![caption](ca-tweet.png)
 
-We can use bookies' odds to estimate the probability of a team winning a match. Then, using these probabilities, we then simulate an entire season and estimate what the probability of a team winning the league really was. There are some problems with this method (see appendix); however, it does allow us to get some ballpark numbers
+Fortunately, there are a couple of different ways we can try to answer this. We can use bookies' odds to estimate the probability of a team winning a match. Then, using these probabilities, we then simulate an entire season and estimate what the probability of a team winning the league really was. There are some problems with this method (see the appendix); however, it does allow us to get some ballpark numbers.
+
+## Zero league titles
+
+So what _is_ the chance of Arsenal winning no league titles since 2004?
 
 ```{r include=FALSE}
 min_season <- min(sim_positions$season)
@@ -33,7 +38,7 @@ p_no_wins <- sim_positions %>%
   as.numeric()
 ```
 
-For instance, by this method the probability of Arsenal winning 0 league titles from `r min_season` to `r max_season` (inclusive) is estimated at `r sprintf("%2.0f", p_no_wins * 100)`%. With a crude simulation like this, it's probably not wise to read too much into the exact numbers. Nonetheless, I think this does suggest that Arsenal have been unlucky to have won no league titles since 2004/05.
+By the method described above, the probability of Arsenal winning 0 league titles from `r min_season` to `r max_season` (inclusive) is estimated at `r sprintf("%2.0f", p_no_wins * 100)`%. With a crude simulation like this, it's probably not wise to read too much into the exact numbers. Nonetheless, this does suggest that Arsenal have been somewhat unlucky not to bring back a few titles over the last 10 years.
 
 So how many league titles should we have expected Arsenal to win?
 
@@ -85,10 +90,9 @@ league_win_distro %>%
            x = 5, y = 25)
 ```
 
+## Some good luck
 
-Okay, but what about the consistency?
-
-If failing to win a league title or two is unlikely given (the bookmakers' opinion of) their overall performance, how unexpected is continued qualification for the Champion's League?
+It seems unfair to consider the bad luck Arsenal have had and yet not consider the good luck they have benefited from elsewhere. If failing to win a league title or two is unlikely given (the bookmakers' opinion of) their overall performance, how unexpected is continued qualification for the Champion's League?
 
 ```{r echo=FALSE, message=FALSE}
 p_always_top4 <- sim_positions %>% 
@@ -132,11 +136,11 @@ sim_raw %>%
            xend = 12, yend = 0.01,
            arrow = arrow(length = unit(0.01, "npc")))
 ```
-The exact estimate here is `r ifelse(p_always_top4 < 1, "<1", sprintf("%2.0f", p_always_top4))`%. When a number gets that low, it's difficult to get a meaningful interpretation. I think the take-away message here is that finishing in the top 4 consistently, even when you're Arsenal, is very unlikely and requires generous doses of both skill and luck.
+The exact estimate here is `r ifelse(p_always_top4 < 1, "<1", sprintf("%2.0f", p_always_top4))`%. When a number gets that low, it's difficult to get a meaningful interpretation. I think the take-away message is that finishing in the top 4 consistently, even when you're Arsenal, is very unlikely and requires large doses of both skill and luck.
 
-What about St Totteringham's Day?
+## What about St Totteringham's Day?
 
-According to [Wikipedia](https://en.wikipedia.org/wiki/Arsenal_F.C._supporters#St._Totteringham.27s_Day), St Totteringham's Day is a celebration "held on the day when Arsenal have gathered enough points to be mathematically assured to finish ahead of Tottenham in the league table".
+According to [Wikipedia](https://en.wikipedia.org/wiki/Arsenal_F.C._supporters#St._Totteringham.27s_Day), St Totteringham's Day is "held on the day when Arsenal have gathered enough points to be mathematically assured to finish ahead of Tottenham in the league table". Celebrated for generations without fail, there have been a few close calls in recent years (not to mention what will happen this year).
 
 ```{r echo=FALSE, message=FALSE}
 p_st_totts <- sim_raw %>% 
@@ -165,7 +169,7 @@ p_st_totts %>%
   theme(panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank()) 
 ```
-Although the individual probabilities remain high, the probability of Arsenal finishing above Tottenham on _all_ of the last 12 seasons is just `r sprintf("%2.0f", p_n_no_totts)`%. It's a good job Arsenal fans enjoyed it while it lasted.
+Although the individual probabilities remain high, the combined probability of Arsenal finishing above Tottenham on _all_ of the last 12 seasons is just `r sprintf("%2.0f", p_n_no_totts)`%. It is of course possible that there are some factors that the odds amy not account for. However, even if you believe that the odds are missing an adjustment for Spursy-ness, it still represents an unlikely acheivement.
 
 
 We can abstract these charts a step further and look at the finishing probabilities of the team in each season since `r min_season`:
@@ -215,7 +219,7 @@ sim_positions %>%
 ```
 
 ## Other teams
-While we're here, let's apply the same thing to a couple of other teams (if you're really keen, you can view all the teams' plots on [github](repolink))
+While we're here, let's apply the same thing to a couple of other teams (if you're really keen, you can view all the teams' plots on [github](https://github.com/Torvaney/unlucky-arsenal))
 
 ### Manchester City
 ```{r echo=FALSE, message=FALSE}
@@ -255,9 +259,9 @@ sim_positions %>%
     * Sum the number of times a team finished in each position.
     * Divide by the total number of simulations (10,000) to estimate the probability of finishing in each position.
 
-By taking the bookies' probabilities game-by-game, in-season effects are, to some degree, taken into account. This means that in each of the simulations, all the injuries, managerial changes, suspensions and the like happen at the same time as they did in real life. This means that the resulting probabilities significantly underestimate the amount of uncertainty in a season of football.
+By taking the bookies' probabilities game-by-game, in-season effects are, to some degree, taken into account. This means that in each of the simulations, all the injuries, managerial changes, suspensions and the like happen at the same time as they did in real life. This means that the resulting probabilities significantly underestimate the amount of uncertainty in a season of football. To use a specific example, the simulation does account for the possibility of Vardy, Mahrez or Kanté having a long term injury in 2015/16.
 
-To use a specific example, the simulation does account for the possibility of Vardy, Mahrez or Kanté having a long term injury in 2015/16.
+In the same way, season-to-season changes aren't accounted for. If Arsenal had won the league in 2010/11, it may have made keeping hold of their (and acquiring new) star players over the next few seasons that much easier. 
 
 ## Data
 
@@ -271,4 +275,4 @@ The odds used were from the following bookmakers:
 
 ## Code
 
-The code, data and figures used for this analysis are [on github](repo-link).
+The code, data and figures used for this analysis are [on github](https://github.com/Torvaney/unlucky-arsenal).
