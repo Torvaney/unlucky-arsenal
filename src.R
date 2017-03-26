@@ -33,3 +33,19 @@ plot_positions <- function(data, team_name, team_colour, text_colour) {
           axis.title = element_blank(),
           legend.position = "none")
 }
+
+
+save_blog_and_print <- function(plot, plot_name, plot_width = 20, plot_height = 14, plot_units = "cm") {
+  fname <- paste0("figures/blog/", plot_name, ".png")
+  
+  ggsave(
+    filename = fname,
+    plot = plot,
+    device = "png",
+    width = plot_width,
+    height = plot_height,
+    units = plot_units
+  )
+  
+  print(plot)
+}

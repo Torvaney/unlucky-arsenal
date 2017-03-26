@@ -18,7 +18,7 @@ Arsenal have been a tremendously consistent team over the past decade. However, 
 
 If you're the fourth best team in the league over 12 seasons, how many league titles should you expect to win? If variance can swing Leicester a league title, you would think it could have thrown a few Arsenal's way, too. This is the question that Chris Anderson (writer of _Soccernomics_) asked [on Twitter](https://twitter.com/soccerquant/status/845196556999417856) last week:
 
-![](ca-tweet.png)
+![](figures/blog/ca-tweet.png)
 
 Fortunately, there are a couple of different ways we can try to answer this. One way is to use bookies' odds to estimate the probability of a team winning a match. Then, using these probabilities, we then simulate an entire season and estimate what the probability of a team winning the league really was. There are some problems with this method (see the appendix); however, it does allow us to get some ballpark numbers.
 
@@ -77,7 +77,7 @@ hist_annotation_text <- paste0(
 arsenal_fill_colour <- "firebrick"
 arsenal_text_colour <- "firebrick4"
 
-league_win_distro %>% 
+league_win_plot <- league_win_distro %>% 
   ggplot(aes(x = no_wins, y = probability)) +
   geom_bar(stat = "identity",
            fill = arsenal_fill_colour) +
@@ -91,6 +91,8 @@ league_win_distro %>%
         panel.grid.minor.x = element_blank()) +
   annotate("text", label = hist_annotation_text, 
            x = 5, y = 25)
+
+save_blog_and_print(league_win_plot, "league-wins")
 ```
 
 ## 12 top four spots
@@ -112,7 +114,7 @@ top4_annotation_text <- paste0(
   "Arsène, wtf"
 )
 
-sim_raw %>% 
+top4_plot <- sim_raw %>% 
   filter(name == "Arsenal",
          position != 0) %>% 
   group_by(simulation_id) %>%
@@ -138,6 +140,8 @@ sim_raw %>%
            x = 12,  y = 10,
            xend = 12, yend = 0.01,
            arrow = arrow(length = unit(0.01, "npc")))
+
+save_blog_and_print(top4_plot, "top-4")
 ```
 The exact estimate here is `r ifelse(p_always_top4 < 1, "<1", sprintf("%2.0f", p_always_top4))`%. When a number gets that low, it's difficult to get a meaningful interpretation. I think the take-away message is that finishing in the top 4 consistently, even when you're Arsenal, is very unlikely and requires large doses of both skill and luck.
 
@@ -146,7 +150,7 @@ The exact estimate here is `r ifelse(p_always_top4 < 1, "<1", sprintf("%2.0f", p
 According to [Wikipedia](https://en.wikipedia.org/wiki/Arsenal_F.C._supporters#St._Totteringham.27s_Day), St Totteringham's Day is "held on the day when Arsenal have gathered enough points to be mathematically assured to finish ahead of Tottenham in the league table". Celebrated for generations without fail, there have been a few close calls in recent years (not to mention what will happen this year).
 
 ```{r echo=FALSE, message=FALSE}
-p_st_totts <- sim_raw %>% 
+p_st_totts_by_season <- sim_raw %>% 
   filter(name %in% c("Arsenal", "Tottenham"),
          position != 0) %>% 
   select(season, name, simulation_id, position) %>% 
@@ -155,13 +159,13 @@ p_st_totts <- sim_raw %>%
   group_by(season) %>% 
   summarise(p_tott = sum(st_tott) * 100 / n_sim)
 
-p_n_no_totts <- p_st_totts %>% 
+p_n_no_totts <- p_st_totts_by_season %>% 
   use_series(p_tott) %>% 
   divide_by(100) %>% 
   prod() %>% 
   multiply_by(100)
 
-p_st_totts %>% 
+st_totts_plot <- p_st_totts_by_season %>% 
   ggplot(aes(x = season, y = p_tott)) +
   geom_bar(stat = "identity",
            fill = arsenal_fill_colour) +
@@ -171,6 +175,8 @@ p_st_totts %>%
   theme_minimal() +
   theme(panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank()) 
+
+save_blog_and_print(st_totts_plot, "st-totts")
 ```
 Although the individual probabilities remain high, the combined probability of Arsenal finishing above Tottenham on _all_ of the last 12 seasons is just `r sprintf("%2.0f", p_n_no_totts)`%. It is of course possible that there are some factors that the odds may not account for. However, even if you believe that the odds are missing an adjustment for Spursy-ness, it still represents an unlikely achievement.
 
