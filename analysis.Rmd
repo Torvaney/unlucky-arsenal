@@ -1,0 +1,274 @@
+---
+title: "The unbearable likeness of Arsenal"
+output:
+  html_notebook: default
+---
+
+```{r include=FALSE, message=FALSE, cache=FALSE}
+# Load the data and packages
+source("src.R")
+
+sim_positions <- read_csv("data/positions.csv")
+sim_raw <- read_csv("data/simulations.csv")
+```
+
+Arsenal have been a tremendously consistent team over the past decade. However, now the tide seems to be turning against Arsène Wenger. Many fans would happily trade in that consistency for a few more league titles.
+
+If you're the fourth best team in the league over 12 seasons, how many league titles should you expect to win? If variance can swing Leicester a league title, you would think it could have throw a few Arsenal's way, too. Fortunately, there are ways to get some cold, hard numbers on this.
+
+We can use bookies' odds to estimate the probability of a team winning a match. Then, using these probabilities, we then simulate an entire season and estimate what the probability of a team winning the league really was. There are some problems with this method (see appendix); however, it does allow us to get some ballpark numbers
+
+```{r include=FALSE}
+min_season <- min(sim_positions$season)
+max_season <- max(sim_positions$season)
+
+p_no_wins <- sim_positions %>% 
+  filter(name == "Arsenal",
+         position != 0,
+         position != 1) %>% 
+  group_by(season) %>% 
+  summarise(percent = sum(percent)) %>% 
+  ungroup() %>% 
+  summarise(prod(percent)) %>% 
+  as.numeric()
+```
+
+For instance, by this method the probability of Arsenal winning 0 league titles from `r min_season` to `r max_season` (inclusive) is estimated at `r sprintf("%2.0f", p_no_wins * 100)`%. With a crude simulation like this, it's probably not wise to read too much into the exact numbers. Nonetheless, I think this does suggest that Arsenal have been unlucky to have won no league titles since 2004/05.
+
+So how many league titles should we have expected Arsenal to win?
+
+```{r echo=FALSE}
+n_sim <- max(sim_raw$simulation_id) + 1
+
+league_win_distro <- sim_raw %>% 
+  filter(name == "Arsenal",
+         position != 0) %>% 
+  group_by(simulation_id) %>%
+  summarise(no_wins = sum(position == 1)) %>% 
+  group_by(no_wins) %>% 
+  summarise(probability = n() * 100 / n_sim)
+
+p_1win <- league_win_distro %>% 
+  filter(no_wins == 1) %>% 
+  use_series(probability) %>% 
+  as.numeric()
+
+p_2win <- league_win_distro %>% 
+  filter(no_wins == 2) %>% 
+  use_series(probability) %>% 
+  as.numeric()
+
+hist_annotation_text <- paste0(
+  "This suggests that the most ", "\n",
+  "likely outcome would be", "\n",
+  "one (", sprintf("%2.0f", p_1win), "%) ",
+  "or two (", sprintf("%2.0f", p_2win), "%) ", "\n",
+  "league titles ", "since ", min_season, "."
+)
+
+arsenal_fill_colour <- "firebrick"
+arsenal_text_colour <- "firebrick4"
+
+league_win_distro %>% 
+  ggplot(aes(x = no_wins, y = probability)) +
+  geom_bar(stat = "identity",
+           fill = arsenal_fill_colour) +
+  scale_x_continuous(breaks = 0:10) +
+  ggtitle("Arsenal league wins",
+          paste("Probability of winning x league titles since", min_season)) +
+  xlab("Number of league wins") +
+  ylab("%") +
+  theme_minimal() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank()) +
+  annotate("text", label = hist_annotation_text, 
+           x = 5, y = 25)
+```
+
+
+Okay, but what about the consistency?
+
+If failing to win a league title or two is unlikely given (the bookmakers' opinion of) their overall performance, how unexpected is continued qualification for the Champion's League?
+
+```{r echo=FALSE, message=FALSE}
+p_always_top4 <- sim_positions %>% 
+  filter(name == "Arsenal",
+         position != 0,
+         position >= 4) %>% 
+  group_by(season) %>% 
+  summarise(percent = sum(percent)) %>% 
+  ungroup() %>% 
+  summarise(prod(percent)) %>% 
+  as.numeric()
+
+top4_annotation_text <- paste0(
+  "Arsène, wtf"
+)
+
+sim_raw %>% 
+  filter(name == "Arsenal",
+         position != 0) %>% 
+  group_by(simulation_id) %>%
+  summarise(no_cl = sum(position >= 4)) %>% 
+  group_by(no_cl) %>% 
+  summarise(probability = n() * 100 / n_sim) %>% 
+  ggplot(aes(x = no_cl, y = probability)) +
+  geom_bar(stat = "identity",
+           fill = arsenal_fill_colour) +
+  scale_x_continuous(breaks = 0:15) +
+  ggtitle("Arsenal top 4 finishes",
+          "Probability of x top 4 finishes since 2004/05") +
+  xlab("Number of top 4 finishes") +
+  ylab("%") +
+  theme_minimal() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank()) +
+  annotate("text", label = top4_annotation_text, 
+           x = 12, y = 10,
+           vjust = -0.5,
+           hjust = 0.75) +
+  annotate("segment", 
+           x = 12,  y = 10,
+           xend = 12, yend = 0.01,
+           arrow = arrow(length = unit(0.01, "npc")))
+```
+The exact estimate here is `r ifelse(p_always_top4 < 1, "<1", sprintf("%2.0f", p_always_top4))`%. When a number gets that low, it's difficult to get a meaningful interpretation. I think the take-away message here is that finishing in the top 4 consistently, even when you're Arsenal, is very unlikely and requires generous doses of both skill and luck.
+
+What about St Totteringham's Day?
+
+According to [Wikipedia](https://en.wikipedia.org/wiki/Arsenal_F.C._supporters#St._Totteringham.27s_Day), St Totteringham's Day is a celebration "held on the day when Arsenal have gathered enough points to be mathematically assured to finish ahead of Tottenham in the league table".
+
+```{r echo=FALSE, message=FALSE}
+p_st_totts <- sim_raw %>% 
+  filter(name %in% c("Arsenal", "Tottenham"),
+         position != 0) %>% 
+  select(season, name, simulation_id, position) %>% 
+  tidyr::spread(name, position) %>%
+  mutate(st_tott = Arsenal < Tottenham) %>% 
+  group_by(season) %>% 
+  summarise(p_tott = sum(st_tott) * 100 / n_sim)
+
+p_n_no_totts <- p_st_totts %>% 
+  use_series(p_tott) %>% 
+  divide_by(100) %>% 
+  prod() %>% 
+  multiply_by(100)
+
+p_st_totts %>% 
+  ggplot(aes(x = season, y = p_tott)) +
+  geom_bar(stat = "identity",
+           fill = arsenal_fill_colour) +
+  ggtitle("Probability of Arsenal finishing above Spurs") +
+  xlab("") +
+  ylab("%") +
+  theme_minimal() +
+  theme(panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank()) 
+```
+Although the individual probabilities remain high, the probability of Arsenal finishing above Tottenham on _all_ of the last 12 seasons is just `r sprintf("%2.0f", p_n_no_totts)`%. It's a good job Arsenal fans enjoyed it while it lasted.
+
+
+We can abstract these charts a step further and look at the finishing probabilities of the team in each season since `r min_season`:
+
+### Arsenal
+```{r echo=FALSE, message=FALSE}
+team_name <- "Arsenal"
+
+annotation_label_1 <- paste0(
+  "Each cell shows the \nprobability of",
+  " ", team_name, "\n",
+  "finishing in that\nposition in that season"
+)
+
+eg_n <- 9
+eg_season <- "2011/12"
+p_n <- sim_positions %>% 
+  filter(name == team_name,
+         position == eg_n,
+         season == eg_season) %>% 
+  use_series(percent) %>% 
+  as.numeric()
+annotation_label_2 <- paste0(
+  "For instance, ", team_name, "\n",
+  "had a ", sprintf("%2.0f", p_n * 100), "% chance ",
+  "of finishing", "\n",
+  eg_n, "th in ", eg_season
+)
+
+sim_positions %>% 
+  plot_positions(team_name, arsenal_fill_colour, arsenal_text_colour) +
+  annotate("text", 
+           label = annotation_label_1,
+           x = 2, y = 11,
+           colour = arsenal_text_colour) +
+  annotate("text",
+           label = annotation_label_2,
+           x = eg_season, y = 12,
+           colour = arsenal_text_colour,
+           vjust = 1) +
+  annotate("curve", 
+           x = eg_season, xend = eg_season,
+           y = 12, yend = eg_n + 0.5,
+           colour = arsenal_text_colour,
+           arrow = arrow(length = unit(0.01, "npc")))
+  
+```
+
+## Other teams
+While we're here, let's apply the same thing to a couple of other teams (if you're really keen, you can view all the teams' plots on [github](repolink))
+
+### Manchester City
+```{r echo=FALSE, message=FALSE}
+
+sim_positions %>% 
+  plot_positions("Man City", "lightblue", "lightblue4")
+```
+Money, what money?
+
+### Manchester United
+```{r echo=FALSE, message=FALSE}
+
+sim_positions %>% 
+  plot_positions("Man United", "tomato", "tomato4")
+```
+I wonder what happened circa 2013/14?
+
+### Chelsea
+```{r echo=FALSE, message=FALSE}
+
+sim_positions %>% 
+  plot_positions("Chelsea", "dodgerblue", "dodgerblue4")
+```
+
+# Nerd nonsense
+
+## Method
+
+ * Take bookmakers' home/draw/away odds
+ * Convert odds to probabilities.
+ * Using prematch probabilities, simulate each game 10,000 times.
+ * For each simulation:
+    * Assign points to home and away teams (3 points for a win, 1 for a draw, 0 for a loss).
+    * Add up the points and sort to create a league table.
+    * In the event of a tie, teams on equal points are ordered randomly.
+ * For each season:
+    * Sum the number of times a team finished in each position.
+    * Divide by the total number of simulations (10,000) to estimate the probability of finishing in each position.
+
+By taking the bookies' probabilities game-by-game, in-season effects are, to some degree, taken into account. This means that in each of the simulations, all the injuries, managerial changes, suspensions and the like happen at the same time as they did in real life. This means that the resulting probabilities significantly underestimate the amount of uncertainty in a season of football.
+
+To use a specific example, the simulation does account for the possibility of Vardy, Mahrez or Kanté having a long term injury in 2015/16.
+
+## Data
+
+Data was originally sourced from [football-data.co.uk](football-data.co.uk). 
+
+The odds used were from the following bookmakers:
+
+ * 2004/05: Bet365
+ * 2005 to 2012: Betbrain average
+ * 2012/13 to 2015/16: Pinnacle closing odds.
+
+## Code
+
+The code, data and figures used for this analysis are [on github](repo-link).

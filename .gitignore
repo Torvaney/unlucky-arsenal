@@ -1,0 +1,14 @@
+# Simulation output
+data/positions.csv
+data/simulations.csv
+
+# Script fetching data from db -> csv
+save_match_odds.py
+
+# R markdown output
+analysis.nb.html
+analysis.pdf
+analysis.docx
+
+# OS X guff
+.DS_Store
