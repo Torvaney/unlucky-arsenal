@@ -6,6 +6,7 @@ data/simulations.csv
 save_match_odds.py
 
 # R markdown output
+analysis.html
 analysis.nb.html
 analysis.pdf
 analysis.docx
