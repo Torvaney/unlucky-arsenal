@@ -172,7 +172,7 @@ p_st_totts %>%
   theme(panel.grid.major.x = element_blank(),
         panel.grid.minor.x = element_blank()) 
 ```
-Although the individual probabilities remain high, the combined probability of Arsenal finishing above Tottenham on _all_ of the last 12 seasons is just `r sprintf("%2.0f", p_n_no_totts)`%. It is of course possible that there are some factors that the odds amy not account for. However, even if you believe that the odds are missing an adjustment for Spursy-ness, it still represents an unlikely acheivement.
+Although the individual probabilities remain high, the combined probability of Arsenal finishing above Tottenham on _all_ of the last 12 seasons is just `r sprintf("%2.0f", p_n_no_totts)`%. It is of course possible that there are some factors that the odds may not account for. However, even if you believe that the odds are missing an adjustment for Spursy-ness, it still represents an unlikely achievement.
 
 I don't think it's at all surprising to conclude that Arsenal were unlucky to miss out on a couple more league titles. I think most football fans could have imagined Arsenal taking the league at times in 2015/16 or 2007/08. It's tempting to wonder what could have happened had everything gone their way just once. Old stars might have stayed; new stars might have joined. You can see how a bit of luck at the right time can kickstart a chain reaction of improvement (looking at you Chelsea 2011/12).
 
