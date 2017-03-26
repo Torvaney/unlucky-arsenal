@@ -217,7 +217,7 @@ annotation_label_2 <- paste0(
   eg_n, "th in ", eg_season
 )
 
-sim_positions %>% 
+arsenal_plot <- sim_positions %>% 
   plot_positions(team_name, arsenal_fill_colour, arsenal_text_colour) +
   annotate("text", 
            label = annotation_label_1,
@@ -233,7 +233,8 @@ sim_positions %>%
            y = 12, yend = eg_n + 0.5,
            colour = arsenal_text_colour,
            arrow = arrow(length = unit(0.01, "npc")))
-  
+
+save_blog_and_print(arsenal_plot, "arsenal")
 ```
 
 Interestingly, it looks like 2011/12 marked the starkest change for Arsenal. It was in the preceding summer that Fabregas and Nasri left.
@@ -242,24 +243,30 @@ Interestingly, it looks like 2011/12 marked the starkest change for Arsenal. It 
 #### Manchester City
 ```{r echo=FALSE, message=FALSE}
 
-sim_positions %>% 
+man_city_plot <- sim_positions %>% 
   plot_positions("Man City", "lightblue", "lightblue4")
+
+save_blog_and_print(man_city_plot, "man-city")
 ```
 Money, what money?
 
 #### Manchester United
 ```{r echo=FALSE, message=FALSE}
 
-sim_positions %>% 
+man_utd_plot <- sim_positions %>% 
   plot_positions("Man United", "tomato", "tomato4")
+
+save_blog_and_print(man_utd_plot, "man-utd")
 ```
 I wonder what happened circa 2013/14?
 
 #### Chelsea
 ```{r echo=FALSE, message=FALSE}
 
-sim_positions %>% 
+chelsea_plot <- sim_positions %>% 
   plot_positions("Chelsea", "dodgerblue", "dodgerblue4")
+
+save_blog_and_print(chelsea_plot, "chelsea")
 ```
 
 ### 2. Nerd nonsense
