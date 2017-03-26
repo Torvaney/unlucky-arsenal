@@ -20,7 +20,7 @@ If you're the fourth best team in the league over 12 seasons, how many league ti
 
 ![](ca-tweet.png)
 
-Fortunately, there are a couple of different ways we can try to answer this. We can use bookies' odds to estimate the probability of a team winning a match. Then, using these probabilities, we then simulate an entire season and estimate what the probability of a team winning the league really was. There are some problems with this method (see the appendix); however, it does allow us to get some ballpark numbers.
+Fortunately, there are a couple of different ways we can try to answer this. One way is to use bookies' odds to estimate the probability of a team winning a match. Then, using these probabilities, we then simulate an entire season and estimate what the probability of a team winning the league really was. There are some problems with this method (see the appendix); however, it does allow us to get some ballpark numbers.
 
 ## Zero league titles
 
