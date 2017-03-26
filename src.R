@@ -17,13 +17,16 @@ plot_positions <- function(data, team_name, team_colour, text_colour) {
            )) %>%
     ggplot(aes(x = season, y = position)) +
     geom_tile(aes(fill = percent)) +
-    geom_text(aes(label = percent_label), colour = text_colour) +
+    geom_text(aes(label = percent_label,
+                  colour = percent)) +
     geom_hline(yintercept = 4.5, colour = text_colour) +
     geom_hline(yintercept = 17.5, colour = text_colour) +
     scale_y_reverse(limits = c(21, 0), breaks = seq(20, 1, -1)) +
     scale_x_discrete(position = "top") +
+    scale_colour_gradient(low = "white", high = text_colour,
+                          limits = c(-0.2, 0.7)) +
     scale_fill_gradient(low = "white", high = team_colour,
-                        limits = c(0, 0.6)) +
+                        limits = c(0, 0.7)) +
     theme_minimal() +
     theme(panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
